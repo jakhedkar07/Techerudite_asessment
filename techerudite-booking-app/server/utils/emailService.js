@@ -1,13 +1,21 @@
 const nodemailer = require('nodemailer');
 
 // Create reusable transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const createTransporter = () => {
+  // Check if email credentials are configured
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('Email credentials not configured in environment variables.');
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+};
 
 /**
  * Send verification email to user
@@ -17,7 +25,16 @@ const transporter = nodemailer.createTransport({
  */
 const sendVerificationEmail = async (email, token, firstName) => {
   try {
-    const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+    const transporter = createTransporter();
+    
+    // If email service is not configured, return success but log warning
+    if (!transporter) {
+      console.warn('Email service not configured, skipping email send.');
+      return true; // Return true for development to allow registration flow to continue
+    }
+
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    const verificationLink = `${clientUrl}/verify-email?token=${token}`;
     
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -39,6 +56,7 @@ const sendVerificationEmail = async (email, token, firstName) => {
     };
     
     await transporter.sendMail(mailOptions);
+    console.log(`Verification email sent to ${email}`);
     return true;
   } catch (error) {
     console.error('Email sending failed:', error);

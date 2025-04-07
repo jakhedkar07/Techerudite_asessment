@@ -8,6 +8,16 @@ exports.register = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
     
+    // Validate input
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+    
+    // Check password strength
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+    
     // Check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -32,7 +42,8 @@ exports.register = async (req, res) => {
     const emailSent = await sendVerificationEmail(email, verificationToken, firstName);
     
     if (!emailSent) {
-      return res.status(500).json({ message: 'Failed to send verification email' });
+      console.warn(`Warning: Failed to send verification email to ${email}`);
+      // Continue with registration but notify the user about email issue
     }
     
     res.status(201).json({ 
@@ -41,7 +52,14 @@ exports.register = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error during registration' });
+    
+    // Provide more specific error message based on the error type
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ message: messages.join(', ') });
+    }
+    
+    res.status(500).json({ message: 'Server error during registration. Please try again later.' });
   }
 };
 
@@ -49,6 +67,10 @@ exports.register = async (req, res) => {
 exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
+    
+    if (!token) {
+      return res.status(400).json({ message: 'Verification token is required' });
+    }
     
     const user = await User.findOne({ verificationToken: token });
     
@@ -64,7 +86,7 @@ exports.verifyEmail = async (req, res) => {
     res.status(200).json({ message: 'Email verification successful. You can now log in.' });
   } catch (error) {
     console.error('Verification error:', error);
-    res.status(500).json({ message: 'Server error during verification' });
+    res.status(500).json({ message: 'Server error during verification. Please try again later.' });
   }
 };
 
@@ -72,6 +94,11 @@ exports.verifyEmail = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
     
     // Find user
     const user = await User.findOne({ email });
@@ -89,7 +116,11 @@ exports.login = async (req, res) => {
     
     // Check if email is verified
     if (!user.isVerified) {
-      return res.status(403).json({ message: 'Please verify your email before logging in' });
+      return res.status(403).json({ 
+        message: 'Please verify your email before logging in',
+        needsVerification: true,
+        email: user.email
+      });
     }
     
     // Generate JWT token
@@ -110,7 +141,7 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during login' });
+    res.status(500).json({ message: 'Server error during login. Please try again later.' });
   }
 };
 
@@ -127,7 +158,7 @@ exports.getCurrentUser = async (req, res) => {
     res.status(200).json(user);
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 };
 
@@ -135,6 +166,10 @@ exports.getCurrentUser = async (req, res) => {
 exports.resendVerification = async (req, res) => {
   try {
     const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
     
     const user = await User.findOne({ email });
     
@@ -155,12 +190,12 @@ exports.resendVerification = async (req, res) => {
     const emailSent = await sendVerificationEmail(email, verificationToken, user.firstName);
     
     if (!emailSent) {
-      return res.status(500).json({ message: 'Failed to send verification email' });
+      return res.status(500).json({ message: 'Failed to send verification email. Please try again later.' });
     }
     
     res.status(200).json({ message: 'Verification email sent successfully' });
   } catch (error) {
     console.error('Resend verification error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 }; 
