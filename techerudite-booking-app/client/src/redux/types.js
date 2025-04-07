@@ -1,0 +1,30 @@
+// Auth Types
+export const REGISTER_SUCCESS = 'REGISTER_SUCCESS';
+export const REGISTER_FAIL = 'REGISTER_FAIL';
+export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
+export const LOGIN_FAIL = 'LOGIN_FAIL';
+export const LOGOUT = 'LOGOUT';
+export const VERIFY_EMAIL_SUCCESS = 'VERIFY_EMAIL_SUCCESS';
+export const VERIFY_EMAIL_FAIL = 'VERIFY_EMAIL_FAIL';
+export const RESEND_VERIFICATION_SUCCESS = 'RESEND_VERIFICATION_SUCCESS';
+export const RESEND_VERIFICATION_FAIL = 'RESEND_VERIFICATION_FAIL';
+export const USER_LOADED = 'USER_LOADED';
+export const AUTH_ERROR = 'AUTH_ERROR';
+
+// Alert Types
+export const SET_ALERT = 'SET_ALERT';
+export const REMOVE_ALERT = 'REMOVE_ALERT';
+
+// Booking Types
+export const GET_BOOKINGS = 'GET_BOOKINGS';
+export const GET_BOOKING = 'GET_BOOKING';
+export const CREATE_BOOKING = 'CREATE_BOOKING';
+export const UPDATE_BOOKING = 'UPDATE_BOOKING';
+export const DELETE_BOOKING = 'DELETE_BOOKING';
+export const BOOKING_ERROR = 'BOOKING_ERROR';
+export const CHECK_AVAILABILITY = 'CHECK_AVAILABILITY';
+export const CLEAR_BOOKING = 'CLEAR_BOOKING';
+
+// Loading Types
+export const SET_LOADING = 'SET_LOADING';
+export const CLEAR_LOADING = 'CLEAR_LOADING'; 
